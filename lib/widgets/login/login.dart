@@ -3,9 +3,47 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_project/widgets/home.dart';
 import 'package:mobile_project/widgets/register/register.dart';
+import 'package:http/http.dart' as http;
 
-class Login extends StatelessWidget {
+class Login extends StatefulWidget {
   const Login({super.key});
+
+  @override
+  State<Login> createState() => _LoginState();
+}
+
+class _LoginState extends State<Login> {
+  TextEditingController mailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  bool showError = false; // Estado para controlar a exibição do erro
+
+  void loginRequest(BuildContext context, String email, String password) async {
+    final url = Uri.parse("https://todo-api-service.onrender.com/users/signin");
+
+    try {
+      final response = await http.post(url, body: {
+        'email': email,
+        'password': password,
+      });
+
+      if (response.statusCode == 200) {
+        // Usuário autenticado com sucesso, avance para a tela Home
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        // Exibir mensagem de erro ao usuário
+        print("${response.statusCode}");
+        setState(() {
+          showError = true;
+        });
+      }
+    } catch (e) {
+      // Exibir mensagem de erro ao usuário
+      print("error: ${e}");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +72,7 @@ class Login extends StatelessWidget {
                 ),
                 SizedBox(height: 20.0),
                 TextFormField(
+                  controller: mailController,
                   decoration: InputDecoration(
                     labelText: 'E-mail',
                   ),
@@ -41,24 +80,32 @@ class Login extends StatelessWidget {
                 SizedBox(height: 20.0),
                 TextFormField(
                   obscureText: true,
+                  controller: passwordController,
                   decoration: InputDecoration(
                     labelText: 'Senha',
                   ),
                 ),
                 SizedBox(height: 20.0),
+                if (showError) // Exibe o texto de erro se o estado showError for true
+                  Center(
+                    child: Text(
+                      'Email ou senha incorretos.',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                SizedBox(height: 20.0),
                 Center(
-                  child: TextButton(
+                  child: ElevatedButton(
                     style: ButtonStyle(
                       backgroundColor:
                           MaterialStateProperty.all<Color>(Colors.deepPurple),
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomePage(),
-                        ),
-                      );
+                      String mail = mailController.text;
+                      String password = passwordController.text;
+                      loginRequest(context, mail, password);
                     },
                     child: Padding(
                         padding:
