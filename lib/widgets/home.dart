@@ -4,6 +4,26 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+class Note {
+  final DateTime date;
+  final String text;
+
+  Note({
+    required this.date,
+    required this.text,
+  });
+
+  Note copyWith({
+    DateTime? date,
+    String? text,
+  }) {
+    return Note(
+      date: date ?? this.date,
+      text: text ?? this.text,
+    );
+  }
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -258,22 +278,4 @@ class _HomePageState extends State<HomePage>
   bool get wantKeepAlive => true;
 }
 
-class Note {
-  final DateTime date;
-  final String text;
 
-  Note({
-    required this.date,
-    required this.text,
-  });
-
-  Note copyWith({
-    DateTime? date,
-    String? text,
-  }) {
-    return Note(
-      date: date ?? this.date,
-      text: text ?? this.text,
-    );
-  }
-}
