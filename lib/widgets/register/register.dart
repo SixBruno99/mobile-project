@@ -1,10 +1,51 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_project/widgets/login/login.dart';
+import 'package:http/http.dart' as http;
+
+import '../home.dart';
 
 class Register extends StatelessWidget {
-  const Register({super.key});
+  Register({super.key});
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController mailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  void registerRequest(
+      BuildContext context, String name, String email, String password) async {
+    String url = "https://todo-api-service.onrender.com/users/signup";
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+    };
+
+    Map<String, String> userData = {
+      'name': name,
+      'email': email,
+      'password': password,
+    };
+
+    String jsonBody = json.encode(userData);
+
+    try {
+      var response =
+          await http.post(Uri.parse(url), headers: headers, body: jsonBody);
+
+      if (response.statusCode == 201) {
+        print("Success - code 201");
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {}
+    } catch (error) {
+      print('Erro durante a requisição: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +74,21 @@ class Register extends StatelessWidget {
                   ),
                   SizedBox(height: 20.0),
                   TextFormField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nome',
+                    ),
+                  ),
+                  SizedBox(height: 20.0),
+                  TextFormField(
+                    controller: mailController,
                     decoration: InputDecoration(
                       labelText: 'E-mail',
                     ),
                   ),
                   SizedBox(height: 20.0),
                   TextFormField(
+                    controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'Senha',
@@ -46,23 +96,32 @@ class Register extends StatelessWidget {
                   ),
                   SizedBox(height: 20.0),
                   Center(
-                    child: TextButton(
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.deepPurple),
-                      ),
+                    child: ElevatedButton(
                       onPressed: () {
-                        // Implementar a lógica de login aqui
+                        print("cadastrar clicado");
+                        String name = nameController.text;
+                        print("nome: ${name}");
+                        String email = mailController.text;
+                        print("email: ${email}");
+                        String password = passwordController.text;
+                        print("senha: ${password}");
+
+                        registerRequest(context, name, email, password);
                       },
-                      child: Padding(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      ),
+                      child: SizedBox(
+                        child: Padding(
+                          padding: EdgeInsets.all(4.0),
                           child: Text(
                             'Cadastrar',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                          )),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: 10.0),
