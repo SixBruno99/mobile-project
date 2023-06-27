@@ -15,7 +15,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   TextEditingController mailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  bool showError = false; // Estado para controlar a exibição do erro
+  bool showError = false;
 
   void loginRequest(BuildContext context, String email, String password) async {
     final url = Uri.parse("https://todo-api-service.onrender.com/users/signin");
@@ -27,20 +27,17 @@ class _LoginState extends State<Login> {
       });
 
       if (response.statusCode == 200) {
-        // Usuário autenticado com sucesso, avance para a tela Home
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       } else {
-        // Exibir mensagem de erro ao usuário
         print("${response.statusCode}");
         setState(() {
           showError = true;
         });
       }
     } catch (e) {
-      // Exibir mensagem de erro ao usuário
       print("error: ${e}");
     }
   }
