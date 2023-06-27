@@ -276,58 +276,66 @@ class _HomePageState extends State<HomePage>
     return null;
   }
 
-  Widget _buildNotesList() {
-    final notes = _getNotesByDate(_selectedDate);
+Widget _buildNotesList() {
+  final notes = _getNotesByDate(_selectedDate);
 
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: notes.length,
-      itemBuilder: (BuildContext context, int index) {
-        final note = notes[index];
+  return SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: notes.length,
+          itemBuilder: (BuildContext context, int index) {
+            final note = notes[index];
 
-        return ListTile(
-          title: Text(note.text),
-          subtitle: FutureBuilder<String?>(
-            future: _fetchTaskDescription(note.date),
-            builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Text('Carregando...');
-              } else if (snapshot.hasError) {
-                return Text('Erro ao carregar a descrição');
-              } else if (snapshot.hasData && snapshot.data != null) {
-                return Text(snapshot.data!);
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(Icons.edit),
-                onPressed: () {
-                  _editNote(note);
+            return ListTile(
+              title: Text(note.text),
+              subtitle: FutureBuilder<String?>(
+                future: _fetchTaskDescription(note.date),
+                builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Text('Carregando...');
+                  } else if (snapshot.hasError) {
+                    return Text('Erro ao carregar a descrição');
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    return Text(snapshot.data!);
+                  } else {
+                    return SizedBox.shrink();
+                  }
                 },
               ),
-              IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  _deleteNote(note);
-                },
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      _editNote(note);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      _deleteNote(note);
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
-          onTap: () {
-            _editNote(note);
+              onTap: () {
+                _editNote(note);
+              },
+              onLongPress: () {
+                _deleteNote(note);
+              },
+            );
           },
-          onLongPress: () {
-            _deleteNote(note);
-          },
-        );
-      },
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
