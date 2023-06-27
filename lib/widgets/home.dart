@@ -1,8 +1,14 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'dart:convert';
+
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import '../repositorie/user_id.dart';
+import 'package:http/http.dart' as http;
 
 class Note {
   final DateTime date;
@@ -38,18 +44,16 @@ class _HomePageState extends State<HomePage>
 
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
+  TextEditingController noteController = TextEditingController();
+
   void _addNote() async {
     final Note? note = await showDialog<Note>(
       context: context,
       builder: (BuildContext context) {
-        String text = '';
-
         return AlertDialog(
           title: Text('Adicionar Nota'),
           content: TextField(
-            onChanged: (value) {
-              text = value;
-            },
+            controller: noteController,
             decoration: InputDecoration(
               hintText: 'Digite a nota...',
             ),
@@ -65,12 +69,40 @@ class _HomePageState extends State<HomePage>
                   child: Text('Cancelar'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final newNote = Note(
                       date: _selectedDate,
-                      text: text,
+                      text: noteController.text,
                     );
                     Navigator.of(context).pop(newNote);
+
+                    final userProvider =
+                        Provider.of<UserProvider>(context, listen: false);
+                    final userId = userProvider.userId;
+
+                    final url =
+                        Uri.parse("https://todo-api-service.onrender.com/task");
+
+                    try {
+                      final response = await http.post(
+                        url,
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({
+                          'userId': userId,
+                          'date': newNote.date.toIso8601String(),
+                          'text': newNote.text,
+                        }),
+                      );
+
+                      if (response.statusCode == 201) {
+                        print("Task adicionada com sucesso!");
+                      } else {
+                        print(
+                            "Falha ao adicionar a task. Código de status: ${response.statusCode}");
+                      }
+                    } catch (e) {
+                      print("Erro ao adicionar a task: $e");
+                    }
                   },
                   child: Text('Adicionar'),
                 ),
@@ -113,9 +145,36 @@ class _HomePageState extends State<HomePage>
               child: Text('Cancelar'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 final editedNote = note.copyWith(text: text);
                 Navigator.of(context).pop(editedNote);
+
+                final userProvider =
+                    Provider.of<UserProvider>(context, listen: false);
+                final userId = userProvider.userId;
+
+                final url = Uri.parse(
+                    "https://todo-api-service.onrender.com/task/$userId");
+
+                try {
+                  final response = await http.patch(
+                    url,
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'date': editedNote.date.toIso8601String(),
+                      'text': editedNote.text,
+                    }),
+                  );
+
+                  if (response.statusCode == 200) {
+                    print("Task atualizada com sucesso!");
+                  } else {
+                    print(
+                        "Falha ao atualizar a task. Código de status: ${response.statusCode}");
+                  }
+                } catch (e) {
+                  print("Erro ao atualizar a task: $e");
+                }
               },
               child: Text('Salvar'),
             ),
@@ -188,6 +247,35 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  Future<String?> _fetchTaskDescription(DateTime date) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.userId;
+
+    final url =
+        Uri.parse("https://todo-api-service.onrender.com/task/user/$userId");
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final task = data.firstWhere(
+          (task) => DateTime.parse(task['date']).isAtSameMomentAs(date),
+          orElse: () => null,
+        );
+        if (task != null) {
+          return task['description'];
+        }
+      } else {
+        print(
+            "Falha ao obter a tarefa. Código de status: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Erro ao obter a tarefa: $e");
+    }
+
+    return null;
+  }
+
   Widget _buildNotesList() {
     final notes = _getNotesByDate(_selectedDate);
 
@@ -199,6 +287,20 @@ class _HomePageState extends State<HomePage>
 
         return ListTile(
           title: Text(note.text),
+          subtitle: FutureBuilder<String?>(
+            future: _fetchTaskDescription(note.date),
+            builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text('Carregando...');
+              } else if (snapshot.hasError) {
+                return Text('Erro ao carregar a descrição');
+              } else if (snapshot.hasData && snapshot.data != null) {
+                return Text(snapshot.data!);
+              } else {
+                return SizedBox.shrink();
+              }
+            },
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -262,6 +364,9 @@ class _HomePageState extends State<HomePage>
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _addNote();
+          setState(() {
+            noteController.text = '';
+          });
         },
         child: Icon(Icons.add),
       ),
@@ -271,5 +376,3 @@ class _HomePageState extends State<HomePage>
   @override
   bool get wantKeepAlive => true;
 }
-
-

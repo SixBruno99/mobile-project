@@ -1,9 +1,14 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_project/widgets/home.dart';
 import 'package:mobile_project/widgets/register/register.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+import '../../repositorie/user_id.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -17,8 +22,10 @@ class _LoginState extends State<Login> {
   TextEditingController passwordController = TextEditingController();
   bool showError = false;
 
-  void loginRequest(BuildContext context, String email, String password) async {
+  void login(BuildContext context, String email, String password) async {
     final url = Uri.parse("https://todo-api-service.onrender.com/users/signin");
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     try {
       final response = await http.post(url, body: {
@@ -27,6 +34,11 @@ class _LoginState extends State<Login> {
       });
 
       if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final userId = jsonResponse['id'];
+
+        userProvider.setUserId(userId);
+
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
@@ -60,9 +72,9 @@ class _LoginState extends State<Login> {
                 SizedBox(height: 20.0),
                 Center(
                   child: Text(
-                    'Bem-vindo ao app de anotações',
+                    'Bem-vindo ao TaskGo',
                     style: TextStyle(
-                      fontSize: 20.0,
+                      fontSize: 24.0,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -102,7 +114,7 @@ class _LoginState extends State<Login> {
                     onPressed: () {
                       String mail = mailController.text;
                       String password = passwordController.text;
-                      loginRequest(context, mail, password);
+                      login(context, mail, password);
                     },
                     child: Padding(
                         padding:
@@ -135,17 +147,6 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                 ),
-                SizedBox(height: 100.0),
-                Center(
-                  child: Text(
-                    "Integrantes:\n Luís \n Willian \n João \n Pedro",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                      fontSize: 20,
-                    ),
-                  ),
-                )
               ],
             ),
           ),

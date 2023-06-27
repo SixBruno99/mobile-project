@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_project/repositorie/user_id.dart';
+import 'package:provider/provider.dart';
 
 import 'widgets/login/login.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MultiProvider(
+          providers: [
+        ChangeNotifierProvider<UserProvider>(
+          create: (_) => UserProvider(),
+        ),
+      ],
+      child: const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: MyApp(),
+      ),
+  ));
 }
 
 class MyApp extends StatelessWidget {

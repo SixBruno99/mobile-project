@@ -36,7 +36,6 @@ class Register extends StatelessWidget {
           await http.post(Uri.parse(url), headers: headers, body: jsonBody);
 
       if (response.statusCode == 201) {
-        print("Success - code 201");
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
@@ -65,7 +64,7 @@ class Register extends StatelessWidget {
                   SizedBox(height: 20.0),
                   Center(
                     child: Text(
-                      'Bem-vindo ao app de anotações',
+                      'Bem-vindo ao TaskGo',
                       style: TextStyle(
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
@@ -98,13 +97,9 @@ class Register extends StatelessWidget {
                   Center(
                     child: ElevatedButton(
                       onPressed: () {
-                        print("cadastrar clicado");
                         String name = nameController.text;
-                        print("nome: ${name}");
                         String email = mailController.text;
-                        print("email: ${email}");
                         String password = passwordController.text;
-                        print("senha: ${password}");
 
                         registerRequest(context, name, email, password);
                       },
